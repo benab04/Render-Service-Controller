@@ -33,7 +33,7 @@ export async function getServiceMetrics(resolutionSeconds = '60') {
 }
 
 export async function getServiceEventLogs() {
-    return fetchWithAuth(`/services/${process.env.RENDER_SERVICE_ID}/events?startTime=2025-06-01T08%3A15%3A30Z&limit=100`);
+    return fetchWithAuth(`/services/${process.env.RENDER_SERVICE_ID}/events?startTime=2025-06-01T00:00:00Z&limit=100`);
 }
 
 export async function suspendService() {
@@ -101,15 +101,3 @@ export async function calculateServiceCost(): Promise<{ totalActiveSeconds: numb
     }
 }
 
-// Example usage function
-export async function getServiceCostReport() {
-    try {
-        const result = await calculateServiceCost();
-        console.log(`Total Active Time: ${result.totalActiveSeconds} seconds`);
-        console.log(`Total Cost: $${result.totalCost}`);
-        return result;
-    } catch (error) {
-        console.error('Error getting service cost report:', error);
-        throw error;
-    }
-}

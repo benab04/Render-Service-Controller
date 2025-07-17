@@ -32,9 +32,47 @@ export async function getServiceMetrics(resolutionSeconds = '60') {
     return fetchWithAuth(`/metrics/cpu?resolutionSeconds=${resolutionSeconds}&resource=${process.env.RENDER_SERVICE_ID}`);
 }
 
+
 export async function getServiceEventLogs() {
-    return fetchWithAuth(`/services/${process.env.RENDER_SERVICE_ID}/events?startTime=2025-06-01T00:00:00Z&limit=100`);
+    const startDate = new Date('2025-06-01T00:00:00Z');
+    const today = new Date();
+    const allLogs = [];
+
+    // Get the first day of the current month
+    const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    let currentDate = new Date(startDate);
+
+    while (currentDate <= today) {
+        // Calculate the end of the current month or today, whichever is earlier
+        const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59, 999);
+        const endDate = endOfMonth > today ? today : endOfMonth;
+
+        // Format dates for API call
+        const startTime = currentDate.toISOString();
+        const endTime = endDate.toISOString();
+
+        try {
+            const monthlyLogs = await fetchWithAuth(
+                `/services/${process.env.RENDER_SERVICE_ID}/events?startTime=${startTime}&endTime=${endTime}&limit=100`
+            );
+
+            // Add the monthly logs to the combined array
+            if (monthlyLogs && Array.isArray(monthlyLogs)) {
+                allLogs.push(...monthlyLogs);
+            }
+        } catch (error) {
+            console.error(`Failed to fetch logs for ${currentDate.toISOString().slice(0, 7)}:`, error);
+            // Continue with other months even if one fails
+        }
+
+        // Move to the first day of the next month
+        currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+    }
+
+    return allLogs;
 }
+
 
 export async function suspendService() {
     return fetchWithAuth(`/services/${process.env.RENDER_SERVICE_ID}/suspend`, {

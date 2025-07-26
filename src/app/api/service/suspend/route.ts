@@ -3,6 +3,12 @@ import { suspendService } from "../../../lib/render-api";
 
 export async function POST() {
     try {
+        if (process.env.SERVICE_ACCESS_DISABLED === "true") {
+            return NextResponse.json(
+                { error: "Service access is currently disabled" },
+                { status: 403 }
+            );
+        }
         const data = await suspendService();
         return NextResponse.json(data);
     } catch (error) {
